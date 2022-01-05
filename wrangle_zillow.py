@@ -298,10 +298,10 @@ def min_max_scaler(train, valid, test):
     '''
     num_vars = list(train.select_dtypes('number').columns)
     scaler = MinMaxScaler(copy=True, feature_range=(0,1))
-    train[num_vars] = scaler.fit_transform(train[num_vars])
-    valid[num_vars] = scaler.transform(valid[num_vars])
-    test[num_vars] = scaler.transform(test[num_vars])
-    return scaler, train, valid, test
+    train_scaled = scaler.fit_transform(train[num_vars])
+    valid_scaled = scaler.transform(valid[num_vars])
+    test_scaled = scaler.transform(test[num_vars])
+    return scaler, train_scaled, valid_scaled, test_scaled
 
 
 # In[34]:
