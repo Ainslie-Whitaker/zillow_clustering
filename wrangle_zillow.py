@@ -226,7 +226,7 @@ def wrangle_zillow():
 
     
     # check for outliers
-    df = df[df.taxvaluedollarcnt < 5_000_000]
+    df = df[df.taxvaluedollarcnt < 2_000_000]
     df[df.calculatedfinishedsquarefeet < 8000]
     
     
