@@ -276,35 +276,46 @@ def split_data(df):
     return train, validate, test 
 
 
-# In[14]:
 
 
-# train, validate, test = split_data(df)
+# split into X and y variables
 
 
-# In[16]:
+def split_tvt_into_variables(train, validate, test, target):
 
+# split train into X (dataframe, drop target) & y (series, keep target only)
+    X_train = train.drop(columns=[target, 'year_built', 'county_code'])
+    y_train = train[target]
+    
+    # split validate into X (dataframe, drop target) & y (series, keep target only)
+    X_validate = validate.drop(columns=[target, 'year_built', 'county_code'])
+    y_validate = validate[target]
+    
+    # split test into X (dataframe, drop target) & y (series, keep target only)
+    X_test = test.drop(columns=[target, 'year_built', 'county_code'])
+    y_test = test[target]
+    
+    return train, validate, test, X_train, y_train, X_validate, y_validate, X_test, y_test
+# train, validate, test, X_train, y_train, X_validate, y_validate, X_test, y_test = split_tvt_into_variables(train, validate, test, target='tax_value')
 
-# train.head()
+# scaler
 
+def Min_Max_Scaler(X_train, X_validate, X_test):
+    """
+    Takes in X_train, X_validate and X_test dfs with numeric values only
+    Returns scaler, X_train_scaled, X_validate_scaled, X_test_scaled dfs 
+    """
+    #Fit the thing
+    scaler = sklearn.preprocessing.MinMaxScaler().fit(X_train)
+    
+    #transform the thing
+    X_train_scaled = pd.DataFrame(scaler.transform(X_train), index = X_train.index, columns = X_train.columns)
+    X_validate_scaled = pd.DataFrame(scaler.transform(X_validate), index = X_validate.index, columns = X_validate.columns)
+    X_test_scaled = pd.DataFrame(scaler.transform(X_test), index = X_test.index, columns = X_test.columns)
+    
+    return scaler, X_train_scaled, X_validate_scaled, X_test_scaled
 
-# ## Scale
-
-# In[19]:
-
-
-def min_max_scaler(train, valid, test):
-    '''
-    Uses the train & test datasets created by the split_my_data function
-    Returns 3 items: mm_scaler, train_scaled_mm, test_scaled_mm
-    This is a linear transformation. Values will lie between 0 and 1
-    '''
-    num_vars = list(train.select_dtypes('number').columns)
-    scaler = MinMaxScaler(copy=True, feature_range=(0,1))
-    train[num_vars] = scaler.fit_transform(train[num_vars])
-    valid[num_vars] = scaler.transform(valid[num_vars])
-    test[num_vars] = scaler.transform(test[num_vars])
-    return scaler, train, valid, test
+# scaler, X_train_scaled, X_validate_scaled, X_test_scaled = Min_Max_Scaler(X_train, X_validate, X_test)
 
 
 # In[34]:
