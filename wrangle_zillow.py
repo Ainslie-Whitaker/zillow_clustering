@@ -278,43 +278,6 @@ def split_data(df):
 
 
 
-# split into X and y variables
-
-
-def split_tvt_into_variables(train, validate, test, target):
-
-# split train into X (dataframe, drop target) & y (series, keep target only)
-    X_train = train.drop(columns=[target, 'year_built', 'county_code'])
-    y_train = train[target]
-    
-    # split validate into X (dataframe, drop target) & y (series, keep target only)
-    X_validate = validate.drop(columns=[target, 'year_built', 'county_code'])
-    y_validate = validate[target]
-    
-    # split test into X (dataframe, drop target) & y (series, keep target only)
-    X_test = test.drop(columns=[target, 'year_built', 'county_code'])
-    y_test = test[target]
-    
-    return train, validate, test, X_train, y_train, X_validate, y_validate, X_test, y_test
-# train, validate, test, X_train, y_train, X_validate, y_validate, X_test, y_test = split_tvt_into_variables(train, validate, test, target='tax_value')
-
-# scaler
-
-def Min_Max_Scaler(X_train, X_validate, X_test):
-    """
-    Takes in X_train, X_validate and X_test dfs with numeric values only
-    Returns scaler, X_train_scaled, X_validate_scaled, X_test_scaled dfs 
-    """
-    #Fit the thing
-    scaler = sklearn.preprocessing.MinMaxScaler().fit(X_train)
-    
-    #transform the thing
-    X_train_scaled = pd.DataFrame(scaler.transform(X_train), index = X_train.index, columns = X_train.columns)
-    X_validate_scaled = pd.DataFrame(scaler.transform(X_validate), index = X_validate.index, columns = X_validate.columns)
-    X_test_scaled = pd.DataFrame(scaler.transform(X_test), index = X_test.index, columns = X_test.columns)
-    
-    return scaler, X_train_scaled, X_validate_scaled, X_test_scaled
-
 # scaler, X_train_scaled, X_validate_scaled, X_test_scaled = Min_Max_Scaler(X_train, X_validate, X_test)
 
 
@@ -362,12 +325,12 @@ def prep_zillow_for_model(train, validate, test):
     '''
 
      # drop object type columns to prepare for scaling
-    train_model = train.drop(columns = ['counties', 'landusecode','regionidcounty','regionidzip',
-                                    'assessmentyear','transactiondate','landusedesc'])
-    validate_model = validate.drop(columns = ['counties', 'landusecode','regionidcounty','regionidzip',
-                                    'assessmentyear','transactiondate','landusedesc'])
-    test_model = test.drop(columns = ['counties', 'landusecode','regionidcounty','regionidzip',
-                                    'assessmentyear','transactiondate','landusedesc'])
+    train_model = train.drop(columns = ['counties','regionidcounty','regionidzip',
+                                    'assessmentyear','transactiondate','age_bin'])
+    validate_model = validate.drop(columns = ['counties','regionidcounty','regionidzip',
+                                    'assessmentyear','transactiondate','age_bin'])
+    test_model = test.drop(columns = ['counties','regionidcounty','regionidzip',
+                                    'assessmentyear','transactiondate','age_bin'])
     
     # use a function to scale data for modeling
     train_scaled, validate_scaled, test_scaled = scale_data_min_maxscaler(train_model, validate_model, test_model)
