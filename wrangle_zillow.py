@@ -318,6 +318,54 @@ def min_max_scaler(train, valid, test):
 
 # In[ ]:
 
+########## Scale ##########
 
+# create function that scales train, validate, and test datasets using min_maxscaler
+def scale_data_min_max(train, validate, test):
+    '''
+    This function takes in train, validate, and test data sets, scales them using sklearn's Min_MaxScaler
+    and returns three scaled data sets
+    '''
+    # Create the scaler
+    scaler = sklearn.preprocessing.MinMaxScaler(copy=True, feature_range=(0,1))
+
+    # Fit scaler on train dataset
+    scaler.fit(train)
+
+    # Transform and rename columns for all three datasets
+    train_scaled = pd.DataFrame(scaler.transform(train), columns = train.columns.tolist())
+    validate_scaled = pd.DataFrame(scaler.transform(validate), columns = train.columns.tolist())
+    test_scaled = pd.DataFrame(scaler.transform(test), columns = train.columns.tolist())
+
+    return train_scaled, validate_scaled, test_scaled
+
+########## Prep ##########
+
+def prep_zillow_for_model(train, validate, test):
+    '''
+    This function takes in train, validate, and test dataframes, preps them for scaling, scales them and returns train, validate, and test datasets
+    ready for clustering and modeling
+    '''
+
+     # drop object type columns to prepare for scaling
+    train_model = train.drop(columns = ['counties', 'landusecode','regionidcounty','regionidzip',
+                                    'assessmentyear','transactiondate','landusedesc'])
+    validate_model = validate.drop(columns = ['counties', 'landusecode','regionidcounty','regionidzip',
+                                    'assessmentyear','transactiondate','landusedesc'])
+    test_model = test.drop(columns = ['counties', 'landusecode','regionidcounty','regionidzip',
+                                    'assessmentyear','transactiondate','landusedesc'])
+    
+    # use a function to scale data for modeling
+    train_scaled, validate_scaled, test_scaled = scale_data_min_maxscaler(train_model, validate_model, test_model)
+    
+    # split scaled data into X_train and y_train
+    X_train = train_scaled.drop(columns='logerror')
+    y_train = train_scaled.logerror
+    X_validate = validate_scaled.drop(columns='logerror')
+    y_validate = validate_scaled.logerror
+    X_test = test_scaled.drop(columns='logerror')
+    y_test = test_scaled.logerror
+
+    return X_train, y_train, X_validate, y_validate, X_test, y_test
 
 
