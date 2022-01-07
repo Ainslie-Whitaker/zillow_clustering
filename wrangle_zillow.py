@@ -327,7 +327,7 @@ def scale_data_min_max(train, validate, test):
     and returns three scaled data sets
     '''
     # Create the scaler
-    scaler = sklearn.preprocessing.MinMaxScaler(copy=True, feature_range=(0,1))
+    scaler = MinMaxScaler(copy=True, feature_range=(0,1))
 
     # Fit scaler on train dataset
     scaler.fit(train)
@@ -348,15 +348,15 @@ def prep_zillow_for_model(train, validate, test):
     '''
 
      # drop object type columns to prepare for scaling
-    train_model = train.drop(columns = ['counties', 'landusecode','regionidcounty','regionidzip',
-                                    'assessmentyear','transactiondate','landusedesc'])
-    validate_model = validate.drop(columns = ['counties', 'landusecode','regionidcounty','regionidzip',
-                                    'assessmentyear','transactiondate','landusedesc'])
-    test_model = test.drop(columns = ['counties', 'landusecode','regionidcounty','regionidzip',
-                                    'assessmentyear','transactiondate','landusedesc'])
+    train_model = train.drop(columns = ['counties','regionidcounty','regionidzip',
+                                    'assessmentyear','transactiondate'])
+    validate_model = validate.drop(columns = ['counties','regionidcounty','regionidzip',
+                                    'assessmentyear','transactiondate'])
+    test_model = test.drop(columns = ['counties','regionidcounty','regionidzip',
+                                    'assessmentyear','transactiondate'])
     
     # use a function to scale data for modeling
-    train_scaled, validate_scaled, test_scaled = scale_data_min_maxscaler(train_model, validate_model, test_model)
+    train_scaled, validate_scaled, test_scaled = scale_data_min_max(train_model, validate_model, test_model)
     
     # split scaled data into X_train and y_train
     X_train = train_scaled.drop(columns='logerror')
