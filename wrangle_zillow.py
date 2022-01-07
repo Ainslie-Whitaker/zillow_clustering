@@ -9,7 +9,7 @@
 
 # ## Imports
 
-# In[1]:
+# In[37]:
 
 
 import numpy as np
@@ -28,6 +28,7 @@ from sklearn.model_selection import train_test_split
 
 # Scale
 from sklearn.preprocessing import MinMaxScaler
+import sklearn.preprocessing
 
 # Stats
 import scipy.stats as stats
@@ -45,7 +46,7 @@ import os
 
 # ## Acquire
 
-# In[2]:
+# In[3]:
 
 
 def get_connection(db, user=env.user, host=env.host, password=env.password):
@@ -55,7 +56,7 @@ def get_connection(db, user=env.user, host=env.host, password=env.password):
     return f'mysql+pymysql://{user}:{password}@{host}/{db}'
 
 
-# In[3]:
+# In[4]:
 
 
 zillow_sql_query =  '''
@@ -97,7 +98,7 @@ zillow_sql_query =  '''
 '''
 
 
-# In[4]:
+# In[5]:
 
 
 def query_zillow_data():
@@ -107,7 +108,7 @@ def query_zillow_data():
     return pd.read_sql(zillow_sql_query,get_connection('zillow'))
 
 
-# In[5]:
+# In[6]:
 
 
 
@@ -136,10 +137,10 @@ def get_zillow_data():
 df = get_zillow_data()
 
 
-# In[8]:
+# In[53]:
 
 
-df.head()
+# df.head()
 
 
 # ## Prepare
@@ -164,7 +165,7 @@ def handle_missing_values(df, prop_required_row = 0.5, prop_required_col = 0.5):
     return df
 
 
-# In[36]:
+# In[23]:
 
 
 def wrangle_zillow():
@@ -210,6 +211,9 @@ def wrangle_zillow():
     
     # add an age column based on year built
     df['age'] = 2017 - df.yearbuilt.astype(int)
+
+    # bin ages
+    df['age_bin'] = pd.cut(df.age, [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 130, 140])
     
     # change dataypes where it makes sense
     int_col_list = ['bedroomcnt', 'calculatedfinishedsquarefeet', 'latitude', 'longitude', 'lotsizesquarefeet',  'structuretaxvaluedollarcnt', 'taxvaluedollarcnt', 'landtaxvaluedollarcnt', 'taxamount']
@@ -240,25 +244,30 @@ def wrangle_zillow():
                        'landtaxvaluedollarcnt':'landtaxvalue','propertylandusedesc':'landusedesc'}, inplace=True)
     
     return df
-    
 
 
-# In[39]:
+# In[24]:
 
 
-# df = wrangle_zillow()
-# df.head()
+df = wrangle_zillow()
+df.head()
 
 
-# In[40]:
+# In[52]:
 
 
 # df.columns
 
 
+# In[51]:
+
+
+# df.bedrooms.describe()
+
+
 # ## Split
 
-# In[12]:
+# In[27]:
 
 
 def split_data(df):
@@ -273,71 +282,64 @@ def split_data(df):
     return train, validate, test 
 
 
-# In[14]:
+# In[49]:
 
 
 # train, validate, test = split_data(df)
 
 
-# In[16]:
+# In[50]:
 
 
 # train.head()
 
 
-# ## Scale
+# ## Split into X and y variables
 
-# In[19]:
-
-
-def min_max_scaler(train, valid, test):
-    '''
-    Uses the train & test datasets created by the split_my_data function
-    Returns 3 items: mm_scaler, train_scaled_mm, test_scaled_mm
-    This is a linear transformation. Values will lie between 0 and 1
-    '''
-    num_vars = list(train.select_dtypes('number').columns)
-    scaler = MinMaxScaler(copy=True, feature_range=(0,1))
-    train_scaled = scaler.fit_transform(train[num_vars])
-    valid_scaled = scaler.transform(valid[num_vars])
-    test_scaled = scaler.transform(test[num_vars])
-    return scaler, train_scaled, valid_scaled, test_scaled
+# In[30]:
 
 
-# In[34]:
+def split_tvt_into_variables(train, validate, test, target):
+
+# split train into X (dataframe, drop target) & y (series, keep target only)
+    X_train = train.drop(columns=[target, 'counties','regionidcounty','regionidzip',
+                                    'assessmentyear','transactiondate','age_bin'])
+    y_train = train[target]
+    
+    # split validate into X (dataframe, drop target) & y (series, keep target only)
+    X_validate = validate.drop(columns=[target, 'counties','regionidcounty','regionidzip',
+                                    'assessmentyear','transactiondate','age_bin'])
+    y_validate = validate[target]
+    
+    # split test into X (dataframe, drop target) & y (series, keep target only)
+    X_test = test.drop(columns=[target, 'counties','regionidcounty','regionidzip',
+                                    'assessmentyear','transactiondate','age_bin'])
+    y_test = test[target]
+    
+    return train, validate, test, X_train, y_train, X_validate, y_validate, X_test, y_test
 
 
-# scaler, train_scaled, validate_scaled, test_scaled = min_max_scaler(train, validate, test)
+# In[48]:
 
 
-# In[25]:
+# Run split_tvt_into_variables / the target is tax_value
+# train, validate, test, X_train, y_train, X_validate, y_validate, X_test, y_test = split_tvt_into_variables(train, validate, test, target='logerror')
 
 
-# train_scaled.head()
+# In[47]:
 
 
-# In[ ]:
+# X_train.shape
 
-########## Scale ##########
 
-# create function that scales train, validate, and test datasets using min_maxscaler
-def scale_data_min_max(train, validate, test):
-    '''
-    This function takes in train, validate, and test data sets, scales them using sklearn's Min_MaxScaler
-    and returns three scaled data sets
-    '''
-    # Create the scaler
-    scaler = MinMaxScaler(copy=True, feature_range=(0,1))
+# In[46]:
 
-    # Fit scaler on train dataset
-    scaler.fit(train)
 
-    # Transform and rename columns for all three datasets
-    train_scaled = pd.DataFrame(scaler.transform(train), columns = train.columns.tolist())
-    validate_scaled = pd.DataFrame(scaler.transform(validate), columns = train.columns.tolist())
-    test_scaled = pd.DataFrame(scaler.transform(test), columns = train.columns.tolist())
+# X_train.head()
 
-    return train_scaled, validate_scaled, test_scaled
+
+# In[54]:
+
 
 ########## Prep ##########
 
@@ -349,11 +351,11 @@ def prep_zillow_for_model(train, validate, test):
 
      # drop object type columns to prepare for scaling
     train_model = train.drop(columns = ['counties','regionidcounty','regionidzip',
-                                    'assessmentyear','transactiondate'])
+                                    'assessmentyear','transactiondate','age_bin'])
     validate_model = validate.drop(columns = ['counties','regionidcounty','regionidzip',
-                                    'assessmentyear','transactiondate'])
+                                    'assessmentyear','transactiondate','age_bin'])
     test_model = test.drop(columns = ['counties','regionidcounty','regionidzip',
-                                    'assessmentyear','transactiondate'])
+                                    'assessmentyear','transactiondate','age_bin'])
     
     # use a function to scale data for modeling
     train_scaled, validate_scaled, test_scaled = scale_data_min_max(train_model, validate_model, test_model)
@@ -368,4 +370,61 @@ def prep_zillow_for_model(train, validate, test):
 
     return X_train, y_train, X_validate, y_validate, X_test, y_test
 
+
+# ## Scale
+
+# In[38]:
+
+
+def Min_Max_Scaler(X_train, X_validate, X_test):
+    """
+    Takes in X_train, X_validate and X_test dfs with numeric values only
+    Returns scaler, X_train_scaled, X_validate_scaled, X_test_scaled dfs 
+    """
+    #Fit the thing
+    scaler = sklearn.preprocessing.MinMaxScaler().fit(X_train)
+    
+    #transform the thing
+    X_train_scaled = pd.DataFrame(scaler.transform(X_train), index = X_train.index, columns = X_train.columns)
+    X_validate_scaled = pd.DataFrame(scaler.transform(X_validate), index = X_validate.index, columns = X_validate.columns)
+    X_test_scaled = pd.DataFrame(scaler.transform(X_test), index = X_test.index, columns = X_test.columns)
+    
+    return scaler, X_train_scaled, X_validate_scaled, X_test_scaled
+
+
+# In[44]:
+
+
+# scaler, X_train_scaled, X_validate_scaled, X_test_scaled = Min_Max_Scaler(X_train, X_validate, X_test)
+
+
+# In[45]:
+
+
+# X_train_scaled.head()
+
+
+# In[42]:
+
+
+########## Scale ##########
+
+# create function that scales train, validate, and test datasets using min_maxscaler
+def scale_data_min_max(train, validate, test):
+    '''
+    This function takes in train, validate, and test data sets, scales them using sklearn's Min_MaxScaler
+    and returns three scaled data sets
+    '''
+    # Create the scaler
+    scaler = sklearn.preprocessing.MinMaxScaler(copy=True, feature_range=(0,1))
+
+    # Fit scaler on train dataset
+    scaler.fit(train)
+
+    # Transform and rename columns for all three datasets
+    train_scaled = pd.DataFrame(scaler.transform(train), columns = train.columns.tolist())
+    validate_scaled = pd.DataFrame(scaler.transform(validate), columns = train.columns.tolist())
+    test_scaled = pd.DataFrame(scaler.transform(test), columns = train.columns.tolist())
+
+    return train_scaled, validate_scaled, test_scaled
 
