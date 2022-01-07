@@ -362,11 +362,11 @@ def prep_zillow_for_model(train, validate, test):
     
     # split scaled data into X_train and y_train
     X_train = train_scaled.drop(columns='logerror')
-    y_train = train_scaled.logerror
+    y_train = train.logerror
     X_validate = validate_scaled.drop(columns='logerror')
-    y_validate = validate_scaled.logerror
+    y_validate = validate.logerror
     X_test = test_scaled.drop(columns='logerror')
-    y_test = test_scaled.logerror
+    y_test = test.logerror
 
     return X_train, y_train, X_validate, y_validate, X_test, y_test
 
