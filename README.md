@@ -25,13 +25,16 @@ The model selected will be evaluated by how well it performs over the baseline a
 
 |   Column_Name   | Description | Type      |
 |   -----------   | ----------- | ---------- |
-| bathrooms | number of bathrooms | float |
-| bedrooms   | numeric representation of internet service type | int64  |
-| area      | numeric representation of contract type  | int64 |
-| lot_area      | number of square feet | int64 |
-| taxvalue   | indicates customer's gender        | int64    | 
-| age      | indicates if customer is senior citizen      | int64 |
-| county   | indicates if customer has a partner       |  object |
+| bathrooms |  Number of bathrooms in home | float |
+| bedrooms   |  Number of bedrooms | int64  |
+| area      |  Calculated total finished living area of the home   | int64 |
+| counties      | los_angeles, orange, & ventura county | object |
+| latitude      |  Latitude of the middle of the parcel multiplied by 10e6| int64 |
+| longitude      |  Longitude of the middle of the parcel multiplied by 10e6 | int64 |
+| taxvalue   | The total tax assessed value of the parcel   | int64    |
+| logerror   | log(Zestimate)−log(SalePrice)       | float64    |
+| age      | Years since home was built      | int64 |
+| bath_bed_ratio   | Number of bedrooms / Number of bathrooms       |  float64 |
 
 ### Project Planning
 
