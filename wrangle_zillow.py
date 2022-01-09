@@ -275,11 +275,15 @@ def split_data(df):
     # splits the data for modeling and exploring, to prevent overfitting
     train_validate, test = train_test_split(df, test_size=.2, random_state=123)
     train, validate = train_test_split(train_validate, test_size=.3, random_state=123)
+
+    train = train.reset_index(drop=True)
+    validate = validate.reset_index(drop=True)
+    test = test.reset_index(drop=True)
     
     # Use train only to explore and for fitting
     # Only use validate to validate models after fitting on train
     # Only use test to test best model 
-    return train, validate, test 
+    return train, validate, test
 
 
 # In[49]:
@@ -392,9 +396,9 @@ def scale_data_min_max(train, validate, test):
     scaler.fit(train)
 
     # Transform and rename columns for all three datasets
-    train_scaled = pd.DataFrame(scaler.transform(train), columns = train.columns.tolist())
-    validate_scaled = pd.DataFrame(scaler.transform(validate), columns = train.columns.tolist())
-    test_scaled = pd.DataFrame(scaler.transform(test), columns = train.columns.tolist())
+    train_scaled = pd.DataFrame(scaler.transform(train), index = train.index, columns = train.columns.tolist())
+    validate_scaled = pd.DataFrame(scaler.transform(validate), index = validate.index,columns = train.columns.tolist())
+    test_scaled = pd.DataFrame(scaler.transform(test), index = test.index, columns = train.columns.tolist())
 
     return train_scaled, validate_scaled, test_scaled
 
@@ -431,9 +435,13 @@ def prep_zillow_for_model(train, validate, test):
 def prep_zillow():
 
     df = wrangle_zillow()
+    df = df.reset_index(drop=True)
     train, validate, test = split_data(df)
     X_train, y_train, X_validate, y_validate, X_test, y_test = prep_zillow_for_model(train, validate, test)
     return train, X_train, y_train, X_validate, y_validate, X_test, y_test
+
+
+from sklearn.cluster import KMeans
 
 
 def create_agetax_cluster(X_train, X_validate, X_test):
@@ -462,21 +470,27 @@ def create_agetax_cluster(X_train, X_validate, X_test):
 
     return centroids, X_train, X_validate, X_test
 
-def agetax_kruskal_test(X_train, y_train)
 
-    # concatenate X_train and y_train so I can check variance of logerror by cluster and conduct stats test
-    X_y = pd.concat([X_train, y_train], axis=1)
 
-    # set alpha
-    alpha = 0.05
+def create_bedbath_area_cluster(X_train, X_validate, X_test):
+    # select the features to use
+    X = X_train[['bathrooms', 'bedrooms', 'area']]
+    X2 = X_validate[['bathrooms', 'bedrooms', 'area']]
+    X3 = X_test[['bathrooms', 'bedrooms', 'area']]
 
-    # use kruskal-wallis test to compare medians
-    stat, pvalue = stats.kruskal(X_y[X_y.agetax_cluster == 0].logerror,
-                                    X_y[X_y.agetax_cluster == 1].logerror,
-                                    X_y[X_y.agetax_cluster == 2].logerror)
+    # use KMeans to create 4 clusters
+    # define the thing
+    kmeans = KMeans(n_clusters=4, random_state = 369)
 
-print(f'{stat}, {pvalue}')
-if pvalue > alpha:
-    print('We fail to reject the null hypothesis')
-elif pvalue < alpha:
-    print('We reject the null hypothesis')
+    # fit the thing
+    kmeans.fit(X)
+
+    # Use the thing to predict
+    kmeans.predict(X)
+
+    # create a new column with the predicted cluster in the original X_train
+    X_train['bedbath_area_cluster'] = kmeans.predict(X)
+    X_validate['bedbath_area_cluster'] = kmeans.predict(X2)
+    X_test['bedbath_area_cluster'] = kmeans.predict(X3)
+
+    return X_train, X_validate, X_test
