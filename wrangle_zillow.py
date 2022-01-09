@@ -170,7 +170,7 @@ def handle_missing_values(df, prop_required_row = 0.5, prop_required_col = 0.5):
 
 def wrangle_zillow():
     # read saved .csv
-    df = pd.read_csv('zillow.csv')
+    df = get_zillow_data()
     
     # propertylandusetypeid that can be considered "single unit" to df
     single_unit = [261, 262, 263, 264, 268, 273, 275, 276, 279]
@@ -184,7 +184,7 @@ def wrangle_zillow():
     df = handle_missing_values(df)
    
     # drop unnecessary columns
-    df = df.drop(columns=['buildingqualitytypeid', 'parcelid', 'id','calculatedbathnbr', 'finishedsquarefeet12', 'fullbathcnt', 'heatingorsystemtypeid', 'propertyzoningdesc', 'censustractandblock','propertycountylandusecode', 'propertylandusetypeid', 'propertylandusedesc', 'unitcnt','heatingorsystemdesc', 'rawcensustractandblock', 'Unnamed: 0'])
+    df = df.drop(columns=['buildingqualitytypeid', 'parcelid', 'id','calculatedbathnbr', 'finishedsquarefeet12', 'fullbathcnt', 'heatingorsystemtypeid', 'propertyzoningdesc', 'censustractandblock','propertycountylandusecode', 'propertylandusetypeid', 'propertylandusedesc', 'unitcnt','heatingorsystemdesc', 'rawcensustractandblock'])
     
     
     # drop null rows for specific columns only
@@ -341,36 +341,6 @@ def split_tvt_into_variables(train, validate, test, target):
 # In[54]:
 
 
-########## Prep ##########
-
-def prep_zillow_for_model(train, validate, test):
-    '''
-    This function takes in train, validate, and test dataframes, preps them for scaling, scales them and returns train, validate, and test datasets
-    ready for clustering and modeling
-    '''
-
-     # drop object type columns to prepare for scaling
-    train_model = train.drop(columns = ['counties','regionidcounty','regionidzip',
-                                    'assessmentyear','transactiondate','age_bin'])
-    validate_model = validate.drop(columns = ['counties','regionidcounty','regionidzip',
-                                    'assessmentyear','transactiondate','age_bin'])
-    test_model = test.drop(columns = ['counties','regionidcounty','regionidzip',
-                                    'assessmentyear','transactiondate','age_bin'])
-    
-    # use a function to scale data for modeling
-    train_scaled, validate_scaled, test_scaled = scale_data_min_max(train_model, validate_model, test_model)
-    
-    # split scaled data into X_train and y_train
-    X_train = train_scaled.drop(columns='logerror')
-    y_train = train.logerror
-    X_validate = validate_scaled.drop(columns='logerror')
-    y_validate = validate.logerror
-    X_test = test_scaled.drop(columns='logerror')
-    y_test = test.logerror
-
-    return X_train, y_train, X_validate, y_validate, X_test, y_test
-
-
 # ## Scale
 
 # In[38]:
@@ -428,3 +398,85 @@ def scale_data_min_max(train, validate, test):
 
     return train_scaled, validate_scaled, test_scaled
 
+########## Prep ##########
+
+def prep_zillow_for_model(train, validate, test):
+    '''
+    This function takes in train, validate, and test dataframes, preps them for scaling, scales them and returns train, validate, and test datasets
+    ready for clustering and modeling
+    '''
+
+     # drop object type columns to prepare for scaling
+    train_model2 = train.drop(columns = ['counties','regionidcounty','regionidzip',
+                                    'assessmentyear','transactiondate','age_bin'])
+    validate_model2 = validate.drop(columns = ['counties','regionidcounty','regionidzip',
+                                    'assessmentyear','transactiondate','age_bin'])
+    test_model2 = test.drop(columns = ['counties','regionidcounty','regionidzip',
+                                    'assessmentyear','transactiondate','age_bin'])
+    
+    # use a function to scale data for modeling
+    train_scaled, validate_scaled, test_scaled = scale_data_min_max(train_model2, validate_model2, test_model2)
+    
+    # split scaled data into X_train and y_train
+    X_train = train_scaled.drop(columns='logerror')
+    y_train = pd.DataFrame(train.logerror)
+    X_validate = validate_scaled.drop(columns='logerror')
+    y_validate = pd.DataFrame(validate.logerror)
+    X_test = test_scaled.drop(columns='logerror')
+    y_test = pd.DataFrame(test.logerror)
+
+    return X_train, y_train, X_validate, y_validate, X_test, y_test
+
+
+def prep_zillow():
+
+    df = wrangle_zillow()
+    train, validate, test = split_data(df)
+    X_train, y_train, X_validate, y_validate, X_test, y_test = prep_zillow_for_model(train, validate, test)
+    return train, X_train, y_train, X_validate, y_validate, X_test, y_test
+
+
+def create_agetax_cluster(X_train, X_validate, X_test):
+    # select the features to use
+    X = X_train[['age', 'taxvalue']]
+    X2 = X_validate[['age', 'taxvalue']]
+    X3 = X_test[['age', 'taxvalue']]
+
+    #  use KMeans to create 3 clusters to see if that may be more meaningful
+    # define the thing
+    kmeans = KMeans(n_clusters=3, random_state = 369)
+
+    # fit the thing
+    kmeans.fit(X)
+
+    # Use the thing to predict
+    kmeans.predict(X)
+
+    # create a new column with the predicted cluster in the original    X_dataframes
+    X_train['agetax_cluster'] = kmeans.predict(X)
+    X_validate['agetax_cluster'] = kmeans.predict(X2)
+    X_test['agetax_cluster'] = kmeans.predict(X3)
+
+    # create dataframe of cluster centers
+    centroids = pd.DataFrame(kmeans.cluster_centers_, columns=X.columns)
+
+    return centroids, X_train, X_validate, X_test
+
+def agetax_kruskal_test(X_train, y_train)
+
+    # concatenate X_train and y_train so I can check variance of logerror by cluster and conduct stats test
+    X_y = pd.concat([X_train, y_train], axis=1)
+
+    # set alpha
+    alpha = 0.05
+
+    # use kruskal-wallis test to compare medians
+    stat, pvalue = stats.kruskal(X_y[X_y.agetax_cluster == 0].logerror,
+                                    X_y[X_y.agetax_cluster == 1].logerror,
+                                    X_y[X_y.agetax_cluster == 2].logerror)
+
+print(f'{stat}, {pvalue}')
+if pvalue > alpha:
+    print('We fail to reject the null hypothesis')
+elif pvalue < alpha:
+    print('We reject the null hypothesis')
