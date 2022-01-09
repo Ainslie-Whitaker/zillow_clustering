@@ -397,7 +397,7 @@ def scale_data_min_max(train, validate, test):
 
     # Transform and rename columns for all three datasets
     train_scaled = pd.DataFrame(scaler.transform(train), index = train.index, columns = train.columns.tolist())
-    validate_scaled = pd.DataFrame(scaler.transform(validate), index = validate.index,columns = train.columns.tolist())
+    validate_scaled = pd.DataFrame(scaler.transform(validate), index = validate.index, columns = train.columns.tolist())
     test_scaled = pd.DataFrame(scaler.transform(test), index = test.index, columns = train.columns.tolist())
 
     return train_scaled, validate_scaled, test_scaled
@@ -494,3 +494,39 @@ def create_bedbath_area_cluster(X_train, X_validate, X_test):
     X_test['bedbath_area_cluster'] = kmeans.predict(X3)
 
     return X_train, X_validate, X_test
+
+def prepare_clusters_for_modeling(X_train, X_validate, X_test):
+    # give clusters names
+    X_train.agetax_cluster = X_train.agetax_cluster.map({0: "older_lowtaxvalue",
+                                                        1: "newer_lowtaxvalue",
+                                                        2: "all_ages_hightaxvalue"})
+
+    X_validate.agetax_cluster = X_validate.agetax_cluster.map({0: "older_lowtaxvalue",
+                                                                1: "newer_lowtaxvalue",
+                                                                2: "all_ages_hightaxvalue"})
+
+    X_test.agetax_cluster = X_test.agetax_cluster.map({0: "older_lowtaxvalue",
+                                                        1: "newer_lowtaxvalue",
+                                                        2: "all_ages_hightaxvalue"})
+
+    X_train.bedbath_area_cluster = X_train.bedbath_area_cluster.map({0: "large_3plusbed",
+                                                                    1: "small_2bed",
+                                                                    2: "tiny_1bed",
+                                                                    3: "medium_3bed"})
+
+    X_validate.bedbath_area_cluster = X_validate.bedbath_area_cluster.map({0: "large_3plusbed",
+                                                                            1: "small_2bed",
+                                                                            2: "tiny_1bed",
+                                                                            3: "medium_3bed"})
+
+    X_test.bedbath_area_cluster = X_test.bedbath_area_cluster.map({0: "large_3plusbed",
+                                                                    1: "small_2bed",
+                                                                    2: "tiny_1bed",
+                                                                    3: "medium_3bed"})
+    
+    # encode cluster columns
+    X_train_model = pd.get_dummies(X_train[['agetax_cluster','bedbath_area_cluster']])
+    X_validate_model = pd.get_dummies(X_validate[['agetax_cluster','bedbath_area_cluster']])
+    X_test_model = pd.get_dummies(X_test[['agetax_cluster','bedbath_area_cluster']])
+
+    return X_train_model, X_validate_model, X_test_model
