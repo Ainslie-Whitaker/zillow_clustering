@@ -1,17 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Zillow
-
-# ### Wrangling the Zillow data
-# 
-# #### Acquires and prepares Zillow data
-
-# ## Imports
-
-# In[37]:
-
-
+## Imports
 import numpy as np
 import pandas as pd
 
@@ -20,8 +10,8 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# default pandas decimal number display format
-pd.options.display.float_format = '{:.2f}'.format
+# # default pandas decimal number display format
+# pd.options.display.float_format = '{:.2f}'.format
 
 # Split 
 from sklearn.model_selection import train_test_split
@@ -29,6 +19,14 @@ from sklearn.model_selection import train_test_split
 # Scale
 from sklearn.preprocessing import MinMaxScaler
 import sklearn.preprocessing
+
+# Model
+from sklearn.cluster import KMeans
+from sklearn.metrics import mean_squared_error
+from sklearn.linear_model import TweedieRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LassoLars
+from sklearn.preprocessing import PolynomialFeatures
 
 # Stats
 import scipy.stats as stats
@@ -44,9 +42,7 @@ import env
 import os
 
 
-# ## Acquire
-
-# In[3]:
+########## Acquire ##########
 
 
 def get_connection(db, user=env.user, host=env.host, password=env.password):
@@ -54,10 +50,6 @@ def get_connection(db, user=env.user, host=env.host, password=env.password):
     This function takes in user credentials from an env.py file and a database name and creates a connection to the Codeup database through a connection string 
     '''
     return f'mysql+pymysql://{user}:{password}@{host}/{db}'
-
-
-# In[4]:
-
 
 zillow_sql_query =  '''
 
@@ -93,12 +85,8 @@ zillow_sql_query =  '''
            FROM predictions_2017
            GROUP BY parcelid
            HAVING MAX(transactiondate));
-       
-       
-'''
+           '''
 
-
-# In[5]:
 
 
 def query_zillow_data():
@@ -106,9 +94,6 @@ def query_zillow_data():
     This function uses the get_connection function to connect to the zillow database and returns the zillow_sql_query read into a pandas dataframe
     '''
     return pd.read_sql(zillow_sql_query,get_connection('zillow'))
-
-
-# In[6]:
 
 
 
@@ -131,24 +116,7 @@ def get_zillow_data():
     return df
 
 
-# In[7]:
 
-
-df = get_zillow_data()
-
-
-# In[53]:
-
-
-# df.head()
-
-
-# ## Prepare
-
-# In[9]:
-
-
-# a function to drop missing values based on a threshold
 def handle_missing_values(df, prop_required_row = 0.5, prop_required_col = 0.5):
     ''' function which takes in a dataframe, required notnull proportions of non-null rows and columns.
     drop the columns and rows columns based on theshold:'''
@@ -161,11 +129,8 @@ def handle_missing_values(df, prop_required_row = 0.5, prop_required_col = 0.5):
     threshold = int(prop_required_row * len(df.columns)) # Require that many non-NA values.
     df.dropna(axis = 0, thresh = threshold, inplace = True)
     
-    
     return df
 
-
-# In[23]:
 
 
 def wrangle_zillow():
@@ -182,13 +147,11 @@ def wrangle_zillow():
     # df with bedroomcnt, bathroomcnt, calculatedfinishedsquarefeet > 0
     df = df[(df.bedroomcnt > 0) & (df.bathroomcnt > 0) & (df.calculatedfinishedsquarefeet>0)]
 
-    
     # drop missing values based on a threshold
     df = handle_missing_values(df)
    
     # drop unnecessary columns
     df = df.drop(columns=['buildingqualitytypeid', 'parcelid', 'id','calculatedbathnbr', 'finishedsquarefeet12', 'fullbathcnt', 'heatingorsystemtypeid', 'propertyzoningdesc', 'censustractandblock','propertycountylandusecode', 'propertylandusetypeid', 'propertylandusedesc', 'unitcnt','heatingorsystemdesc', 'rawcensustractandblock'])
-    
     
     # drop null rows for specific columns only
     df = df[df.regionidzip.notnull()]
@@ -231,11 +194,9 @@ def wrangle_zillow():
     # ratio of bathrooms to bedrooms
     df['bath_bed_ratio'] = df.bathroomcnt/df.bedroomcnt
 
-    
     # check for outliers
     df = df[df.taxvaluedollarcnt < 2_000_000]
     df[df.calculatedfinishedsquarefeet < 8000]
-    
     
     # drop nulls to make sure none were missed
     df = df.dropna()
@@ -248,30 +209,7 @@ def wrangle_zillow():
     
     return df
 
-
-# In[24]:
-
-
-df = wrangle_zillow()
-df.head()
-
-
-# In[52]:
-
-
-# df.columns
-
-
-# In[51]:
-
-
-# df.bedrooms.describe()
-
-
-# ## Split
-
-# In[27]:
-
+########## Split ##########
 
 def split_data(df):
     # train/validate/test split
@@ -289,26 +227,10 @@ def split_data(df):
     return train, validate, test
 
 
-# In[49]:
-
-
-# train, validate, test = split_data(df)
-
-
-# In[50]:
-
-
-# train.head()
-
-
-# ## Split into X and y variables
-
-# In[30]:
-
 
 def split_tvt_into_variables(train, validate, test, target):
 
-# split train into X (dataframe, drop target) & y (series, keep target only)
+#    split train into X (dataframe, drop target) & y (series, keep target only)
     X_train = train.drop(columns=[target, 'counties','regionidcounty','regionidzip',
                                     'assessmentyear','transactiondate','age_bin'])
     y_train = train[target]
@@ -325,33 +247,7 @@ def split_tvt_into_variables(train, validate, test, target):
     
     return train, validate, test, X_train, y_train, X_validate, y_validate, X_test, y_test
 
-
-# In[48]:
-
-
-# Run split_tvt_into_variables / the target is tax_value
-# train, validate, test, X_train, y_train, X_validate, y_validate, X_test, y_test = split_tvt_into_variables(train, validate, test, target='logerror')
-
-
-# In[47]:
-
-
-# X_train.shape
-
-
-# In[46]:
-
-
-# X_train.head()
-
-
-# In[54]:
-
-
-# ## Scale
-
-# In[38]:
-
+########## Scale ##########
 
 def Min_Max_Scaler(X_train, X_validate, X_test):
     """
@@ -369,22 +265,6 @@ def Min_Max_Scaler(X_train, X_validate, X_test):
     return scaler, X_train_scaled, X_validate_scaled, X_test_scaled
 
 
-# In[44]:
-
-
-# scaler, X_train_scaled, X_validate_scaled, X_test_scaled = Min_Max_Scaler(X_train, X_validate, X_test)
-
-
-# In[45]:
-
-
-# X_train_scaled.head()
-
-
-# In[42]:
-
-
-########## Scale ##########
 
 # create function that scales train, validate, and test datasets using min_maxscaler
 def scale_data_min_max(train, validate, test):
@@ -405,7 +285,7 @@ def scale_data_min_max(train, validate, test):
 
     return train_scaled, validate_scaled, test_scaled
 
-########## Prep ##########
+########## Modeling ##########
 
 def prep_zillow_for_model(train, validate, test):
     '''
@@ -443,8 +323,6 @@ def prep_zillow():
     X_train, y_train, X_validate, y_validate, X_test, y_test = prep_zillow_for_model(train, validate, test)
     return train, X_train, y_train, X_validate, y_validate, X_test, y_test
 
-
-from sklearn.cluster import KMeans
 
 
 def create_agetax_cluster(X_train, X_validate, X_test):
@@ -504,6 +382,8 @@ def create_bedbath_area_cluster(X_train, X_validate, X_test):
 
     return X_train, X_validate, X_test
 
+
+
 def prepare_clusters_for_modeling(X_train, X_validate, X_test):
     '''
     This function takes in an X_train, X_validate, and X_test dataset and preps them and encodes them for modeling
@@ -527,3 +407,149 @@ def prepare_clusters_for_modeling(X_train, X_validate, X_test):
     X_test_model = pd.get_dummies(X_test[['agetax_cluster','bedbath_area_cluster']])
 
     return X_train_model, X_validate_model, X_test_model
+
+
+def create_evaluate_baseline(y_train,y_validate):
+    # create a baseline of median logerror
+    y_train['baseline'] = y_train.logerror.median()
+    y_validate['baseline'] = y_train.logerror.median()
+
+    # RMSE of logerror median
+    rmse_train_baseline = round(mean_squared_error(y_train.logerror, y_train.baseline)**(1/2), 5)
+    rmse_validate_baseline = round(mean_squared_error(y_validate.logerror, y_validate.baseline)**(1/2), 5)
+
+    return rmse_train_baseline, rmse_validate_baseline
+
+    # print(f'Baseline logerror is {round(y_train.logerror.median(),5)}.')
+    # print("RMSE for baseline using Median\nTrain/In-Sample: ", round(rmse_train_baseline, 5), 
+    #   "\nValidate/Out-of-Sample: ", round(rmse_validate_baseline, 5))
+
+
+def create_evaluate_tweedie_regressor(X_train_model, X_validate_model, y_train, y_validate):
+    # create the model object
+    glm = TweedieRegressor(power=0, alpha=0.01)
+
+    # fit the model to our training data and specify y column 
+    glm.fit(X_train_model, y_train.logerror)
+
+    # predict train & validate
+    y_train['logerror_pred_glm'] = glm.predict(X_train_model)
+    y_validate['logerror_pred_glm'] = glm.predict(X_validate_model) 
+
+    # evaluate train & validate: rmse
+    rmse_train_glm = round(mean_squared_error(y_train.logerror, y_train.logerror_pred_glm)**(1/2), 5)
+    rmse_validate_glm = round(mean_squared_error(y_validate.logerror, y_validate.logerror_pred_glm)**(1/2), 5)
+
+    return rmse_train_glm, rmse_validate_glm
+    # print("RMSE for GLM using Tweedie\nTraining/In-Sample: ", round(rmse_train_glm, 5), 
+    #   "\nValidation/Out-of-Sample: ", round(rmse_validate_glm, 5))
+
+
+
+
+def create_evaluate_ordinaryleastsquares(X_train_model, X_validate_model, y_train, y_validate):
+    # create the model object
+    lm = LinearRegression(normalize=True)
+
+    # fit the model to our training data and specify y column 
+    lm.fit(X_train_model, y_train.logerror)
+
+    # predict train & validate
+    y_train['logerror_pred_lm'] = lm.predict(X_train_model)
+    y_validate['logerror_pred_lm'] = lm.predict(X_validate_model) 
+
+    # evaluate train & validate: rmse
+    rmse_train_OLS = round(mean_squared_error(y_train.logerror, y_train.logerror_pred_lm)**(1/2), 5)
+    rmse_validate_OLS = round(mean_squared_error(y_validate.logerror, y_validate.logerror_pred_lm)**(1/2), 5)
+
+    return rmse_train_OLS, rmse_validate_OLS
+    # print("RMSE for OLS using LinearRegression\nTraining/In-Sample: ", round(rmse_train_OLS, 5), 
+    #   "\nValidation/Out-of-Sample: ", round(rmse_validate_OLS, 5))
+
+
+
+def create_evaluate_subset_ols(X_train_model, X_validate_model, y_train, y_validate):
+    # select only bed, bath, area cluster features
+    X_train_bba = X_train_model.iloc[:,3:]
+    X_validate_bba = X_validate_model.iloc[:,3:]
+
+    # create the model object
+    lm3 = LinearRegression(normalize=True)
+
+    # fit the model to our training data and specify y column 
+    lm3.fit(X_train_bba, y_train.logerror)
+
+    # predict train & validate
+    y_train['logerror_pred_lm3'] = lm3.predict(X_train_bba)
+    y_validate['logerror_pred_lm3'] = lm3.predict(X_validate_bba)
+
+    # evaluate train & validate: rmse
+    rmse_train_sub1 = round(mean_squared_error(y_train.logerror, y_train.logerror_pred_lm3)**(1/2), 5)  
+    rmse_validate_sub1 = round(mean_squared_error(y_validate.logerror, y_validate.logerror_pred_lm3)**(1/2), 5)
+
+    return rmse_train_sub1, rmse_validate_sub1
+    # print("RMSE for subset OLS using LinearRegression\nTraining/In-Sample: ", round(rmse_train_sub1, 5), 
+    #   "\nValidation/Out-of-Sample: ", round(rmse_validate_sub1, 5))
+
+
+def create_evaluate_polynomial_regression(X_train_model, X_validate_model, y_train, y_validate):
+    # make the polynomial features to get a new set of features
+    pf = PolynomialFeatures(degree=2)
+
+    # fit X_train_model and transform all dataframes
+    X_train_degree2 = pf.fit_transform(X_train_model)
+    X_validate_degree2 = pf.transform(X_validate_model)
+    # X_test_degree2 = pf.transform(X_test_model)
+
+    # create the model object
+    lm2 = LinearRegression(normalize=True)
+
+    # fit the model to our training data and specify y column 
+    lm2.fit(X_train_degree2, y_train.logerror)
+
+    # predict train & validate
+    y_train['logerror_pred_lm2'] = lm2.predict(X_train_degree2) 
+    y_validate['logerror_pred_lm2'] = lm2.predict(X_validate_degree2)
+
+    # evaluate: rmse
+    rmse_train_pr = round(mean_squared_error(y_train.logerror, y_train.logerror_pred_lm2)**(1/2), 5)
+    rmse_validate_pr = round(mean_squared_error(y_validate.logerror, y_validate.logerror_pred_lm2)**(1/2), 5)
+
+    return rmse_train_pr, rmse_validate_pr
+    # print("RMSE for Polynomial Model\nTraining/In-Sample: ", round(rmse_train_pr, 5), 
+    #   "\nValidation/Out-of-Sample: ", round(rmse_validate_pr, 5))
+
+
+def compare_models(X_train_model, X_validate_model, y_train, y_validate):
+    rmse_train_baseline, rmse_validate_baseline = create_evaluate_baseline(y_train,y_validate)
+    rmse_train_glm, rmse_validate_glm = create_evaluate_tweedie_regressor(X_train_model, X_validate_model, y_train, y_validate)
+    rmse_train_OLS, rmse_validate_OLS = create_evaluate_ordinaryleastsquares(X_train_model, X_validate_model, y_train, y_validate)
+    rmse_train_sub1, rmse_validate_sub1 = create_evaluate_subset_ols(X_train_model, X_validate_model, y_train, y_validate)
+    rmse_train_pr, rmse_validate_pr = create_evaluate_polynomial_regression(X_train_model, X_validate_model, y_train, y_validate)
+
+    data = pd.DataFrame({'RMSE_For': ['Baseline_using_Median', 'GLM_using_Tweedie', 'OLS_using_LinearRegression', 'OLS_using_LinearRegression_subset', 'Polynomial_Model'], 
+    'Training/In-Sample': [rmse_train_baseline, rmse_train_glm, rmse_train_OLS, rmse_train_sub1, rmse_train_pr], 
+    'Diff_from_Baseline': [rmse_train_baseline-rmse_train_baseline, rmse_train_glm-rmse_train_baseline, 
+                            rmse_train_OLS-rmse_train_baseline, rmse_train_sub1-rmse_train_baseline, 
+                            rmse_train_pr-rmse_train_baseline],
+    'Validation/Out-of-Sample': [rmse_validate_baseline, rmse_validate_glm, rmse_validate_OLS, rmse_validate_sub1, rmse_validate_pr], 
+    'Diff_from_Baseline2': [rmse_validate_baseline-rmse_validate_baseline, rmse_validate_glm-rmse_validate_baseline, 
+                            rmse_validate_OLS-rmse_validate_baseline, rmse_validate_sub1-rmse_validate_baseline, 
+                            rmse_validate_pr-rmse_validate_baseline]})
+
+    return data
+
+def model_test(X_train_model, y_train, y_test, X_test_model):
+    # create the model object
+    glm = TweedieRegressor(power=0, alpha=0.01)
+
+    # fit the model to our training data and specify y column 
+    glm.fit(X_train_model, y_train.logerror)
+
+    # predict tesr
+    y_test['logerror_pred_glm'] = glm.predict(X_test_model)
+
+    # evaluate test: rmse
+    rmse_test_glm = round(mean_squared_error(y_test.logerror, y_test.logerror_pred_glm)**(1/2), 5)
+
+    return rmse_test_glm
