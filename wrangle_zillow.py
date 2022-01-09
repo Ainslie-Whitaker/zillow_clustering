@@ -169,7 +169,10 @@ def handle_missing_values(df, prop_required_row = 0.5, prop_required_col = 0.5):
 
 
 def wrangle_zillow():
-    # read saved .csv
+    '''
+    This function pulls the zillow data in, cleans and preps it, and returns a dataframe
+    '''
+    # use function to connect and pull in data from the sql server
     df = get_zillow_data()
     
     # propertylandusetypeid that can be considered "single unit" to df
@@ -445,6 +448,9 @@ from sklearn.cluster import KMeans
 
 
 def create_agetax_cluster(X_train, X_validate, X_test):
+    '''
+    This function takes in X_train, X_validate, and X_test datasets and creates clusters based on some of the features
+    '''
     # select the features to use
     X = X_train[['age', 'taxvalue']]
     X2 = X_validate[['age', 'taxvalue']]
@@ -473,6 +479,9 @@ def create_agetax_cluster(X_train, X_validate, X_test):
 
 
 def create_bedbath_area_cluster(X_train, X_validate, X_test):
+    '''
+    This function takes in X_train, X_validate, and X_test datasets and creates clusters based on some of the features
+    '''
     # select the features to use
     X = X_train[['bathrooms', 'bedrooms', 'area']]
     X2 = X_validate[['bathrooms', 'bedrooms', 'area']]
@@ -496,33 +505,21 @@ def create_bedbath_area_cluster(X_train, X_validate, X_test):
     return X_train, X_validate, X_test
 
 def prepare_clusters_for_modeling(X_train, X_validate, X_test):
+    '''
+    This function takes in an X_train, X_validate, and X_test dataset and preps them and encodes them for modeling
+    '''
     # give clusters names
-    X_train.agetax_cluster = X_train.agetax_cluster.map({0: "older_lowtaxvalue",
-                                                        1: "newer_lowtaxvalue",
-                                                        2: "all_ages_hightaxvalue"})
+    X_train.agetax_cluster = X_train.agetax_cluster.map({0: "older_lowtaxvalue", 1: "newer_lowtaxvalue", 2: "all_ages_hightaxvalue"})
 
-    X_validate.agetax_cluster = X_validate.agetax_cluster.map({0: "older_lowtaxvalue",
-                                                                1: "newer_lowtaxvalue",
-                                                                2: "all_ages_hightaxvalue"})
+    X_validate.agetax_cluster = X_validate.agetax_cluster.map({0: "older_lowtaxvalue", 1: "newer_lowtaxvalue", 2: "all_ages_hightaxvalue"})
 
-    X_test.agetax_cluster = X_test.agetax_cluster.map({0: "older_lowtaxvalue",
-                                                        1: "newer_lowtaxvalue",
-                                                        2: "all_ages_hightaxvalue"})
+    X_test.agetax_cluster = X_test.agetax_cluster.map({0: "older_lowtaxvalue", 1: "newer_lowtaxvalue", 2: "all_ages_hightaxvalue"})
 
-    X_train.bedbath_area_cluster = X_train.bedbath_area_cluster.map({0: "large_3plusbed",
-                                                                    1: "small_2bed",
-                                                                    2: "tiny_1bed",
-                                                                    3: "medium_3bed"})
+    X_train.bedbath_area_cluster = X_train.bedbath_area_cluster.map({0: "large_3plusbed", 1: "small_2bed", 2: "tiny_1bed", 3: "medium_3bed"})
 
-    X_validate.bedbath_area_cluster = X_validate.bedbath_area_cluster.map({0: "large_3plusbed",
-                                                                            1: "small_2bed",
-                                                                            2: "tiny_1bed",
-                                                                            3: "medium_3bed"})
+    X_validate.bedbath_area_cluster = X_validate.bedbath_area_cluster.map({0: "large_3plusbed", 1: "small_2bed", 2: "tiny_1bed", 3: "medium_3bed"})
 
-    X_test.bedbath_area_cluster = X_test.bedbath_area_cluster.map({0: "large_3plusbed",
-                                                                    1: "small_2bed",
-                                                                    2: "tiny_1bed",
-                                                                    3: "medium_3bed"})
+    X_test.bedbath_area_cluster = X_test.bedbath_area_cluster.map({0: "large_3plusbed", 1: "small_2bed", 2: "tiny_1bed", 3: "medium_3bed"})
     
     # encode cluster columns
     X_train_model = pd.get_dummies(X_train[['agetax_cluster','bedbath_area_cluster']])
