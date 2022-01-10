@@ -14,12 +14,17 @@ The model selected will be evaluated by how well it performs over the baseline a
 ### Initial Hypotheses/Questions
 
 * Question 1
+Is logerror significantly different for properties in LA County vs Orange County vs Ventura County?
 
 * Question 2
+Is there a relationship between logerror and longitude and latitude?
 
 * Question 3
+Is there a relationship between logerror and bedrooms?
 
 * Question 4
+Would clustering on the physical characteristics be useful?
+
 
 ### Data dictionary
 
