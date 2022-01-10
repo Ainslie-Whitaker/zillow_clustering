@@ -353,7 +353,7 @@ def create_agetax_cluster(X_train, X_validate, X_test):
     # create dataframe of cluster centers
     centroids = pd.DataFrame(kmeans.cluster_centers_, columns=X.columns)
 
-    return centroids, X_train, X_validate, X_test
+    return X_train, X_validate, X_test
 
 
 
@@ -389,6 +389,8 @@ def prepare_clusters_for_modeling(X_train, X_validate, X_test):
     '''
     This function takes in an X_train, X_validate, and X_test dataset and preps them and encodes them for modeling
     '''
+    X_train, X_validate, X_test = create_agetax_cluster(X_train, X_validate, X_test)
+    X_train, X_validate, X_test = create_bedbath_area_cluster(X_train, X_validate, X_test)
     # give clusters names
     X_train.agetax_cluster = X_train.agetax_cluster.map({0: "older_lowtaxvalue", 1: "newer_lowtaxvalue", 2: "all_ages_hightaxvalue"})
 
