@@ -13,17 +13,13 @@ The model selected will be evaluated by how well it performs over the baseline a
 
 ### Initial Hypotheses/Questions
 
-* Question 1
-Is logerror significantly different for properties in LA County vs Orange County vs Ventura County?
+* Is logerror significantly different for properties in LA County vs Orange County vs Ventura County?
 
-* Question 2
-Is there a relationship between logerror and longitude and latitude?
+* Is there a relationship between logerror and longitude and latitude?
 
-* Question 3
-Is there a relationship between logerror and bedrooms?
+* Is there a relationship between logerror and bedrooms?
 
-* Question 4
-Would clustering on the physical characteristics be useful?
+* Would clustering on the physical characteristics be useful?
 
 
 ### Data dictionary
@@ -74,18 +70,14 @@ Would clustering on the physical characteristics be useful?
 
 **Exploration**
 * Ask questions/form hypotheses
-  * Question 1
-  * Question 2
-  * Question 3
-  * Question 4
+  * Is logerror significantly different for properties in LA County vs Orange County vs Ventura County?
+  * Is there a relationship between logerror and longitude and latitude?
+  * Is there a relationship between logerror and bedrooms?
+  * Would clustering on the physical characteristics be useful?
 * Use clustering to explore data
 * Create visualizations to help identify drivers
 * Use statistical tests to test hypotheses
 * Document answers to questions and takeaways
-  * Answer/Takeaway 1
-  * Answer/Takeaway 2
-  * Answer/Takeaway 3
-  * Answer/Takeaway 4
 
 **Modeling**
 * Identify, select, and create features that affect target variable (logerror)
@@ -110,7 +102,9 @@ Would clustering on the physical characteristics be useful?
 * Run the zillow_clustering_project_final.ipynb notebook
 
 ### Recommendations and Next Steps
-* Recommendation 1
-* Recommendation 2
+* Recommend using this model in the meantime for slightly better predictions than baseline
+* Recommend creating separate models for each of the counties as we did find the logerror varied among them
 
 * Next Steps
+  * With more time and resources, we would like to further explore the clusters that were created and model each of those separately
+  * We would also like to run statistical tests on each of the clusters to see which would be most useful as a features moving forward with modeling
